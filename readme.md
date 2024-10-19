@@ -196,6 +196,20 @@ Maintaining high data quality and monitoring the health of a data pipeline are c
 
 key tests in data transformation
 
+## Schema Change Test
+To ensure that the data model remains robust despite changes in upstream tables, dbt’s schema tests can be implemented. These tests validate the structure of the source tables and help catch any unexpected changes in schema that could break downstream transformations.
+
+### Key schema tests include:
+
+`Not Null Test`: Ensures critical columns like account_id_hashed, user_id_hashed, and created_ts are always populated and not null.
+
+`Unique Test`: Validates that the combination of account_id_hashed and user_id field is unique, ensuring that no two user_id  share the same account_id_hashed unless expected from business feature.
+
+`Dbt expectation`: expect that each columns in source tables used in downstream model transformation are present
+
+`Relationships Test`: Verifies that  relationships, such as account_id_hashed linking to related tables are intact. An account_id_hashed in the account_closed table should also be present in the account_open table
+
+
 ## Data Integrity Test for Account Lifecycle Events
 `Purpose`: Ensure that there is a correct alignment of lifecycle events (account creation, closure, reopening) and that no invalid relationships exist.
 
@@ -229,19 +243,4 @@ GROUP BY uam.account_id_hashed
 HAVING uam.total_transactions != expected_total;
 
 ```
-
-## Schema Change Test
-To ensure that the data model remains robust despite changes in upstream tables, dbt’s schema tests can be implemented. These tests validate the structure of the source tables and help catch any unexpected changes in schema that could break downstream transformations.
-
-### Key schema tests include:
-
-`Not Null Test`: Ensures critical columns like account_id_hashed, user_id_hashed, and created_ts are always populated and not null.
-
-`Unique Test`: Validates that the combination of account_id_hashed and user_id field is unique, ensuring that no two user_id  share the same account_id_hashed unless expected from business feature.
-
-`Dbt expectation`: expect that each columns in source tables used in downstream model transformation are present
-
-`Relationships Test`: Verifies that  relationships, such as account_id_hashed linking to related tables are intact. An account_id_hashed in the account_closed table should also be present in the account_open table
-
-
 
