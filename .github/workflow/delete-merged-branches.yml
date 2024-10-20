@@ -1,0 +1,60 @@
+name: Delete Merged and Closed Branches
+
+on:
+  schedule:
+    - cron: "0 0 * * 0" # Runs every Sunday at midnight
+  workflow_dispatch: # Allows manual trigger
+
+jobs:
+  delete-branches:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Defined once here
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      
+
+      - name: Fetch merged pull requests
+        run: |
+          gh pr list --state merged --json headRefName --jq '.[].headRefName' > merged_branches.txt
+
+      - name: Delete merged branches
+        run: |
+          set +e  # Disable exit on error
+          while read branch; do
+            if [ "$branch" != "main" ]; then
+              output=$(git push origin --delete "$branch" 2>&1)
+              if echo "$output" | grep -q "remote ref does not exist"; then
+                echo "Branch $branch does not exist, skipping"
+              elif echo "$output" | grep -q "deleted"; then
+                echo "$output" # Show successful deletion message
+              else
+                echo "An unexpected error occurred while deleting $branch"
+              fi
+            fi
+          done < merged_branches.txt
+          set -e  # Re-enable exit on error
+
+      - name: Fetch closed (stale) pull requests
+        run: |
+          gh pr list --state closed --json headRefName --jq '.[].headRefName' > closed_branches.txt
+
+      - name: Delete closed branches
+        run: |
+          set +e  # Disable exit on error
+          while read branch; do
+            if [ "$branch" != "main" ]; then
+              output=$(git push origin --delete "$branch" 2>&1)
+              if echo "$output" | grep -q "remote ref does not exist"; then
+                echo "Branch $branch does not exist, skipping"
+              elif echo "$output" | grep -q "deleted"; then
+                echo "$output" # Show successful deletion message
+              else
+                echo "An unexpected error occurred while deleting $branch"
+              fi
+            fi
+          done < closed_branches.txt
+          set -e  # Re-enable exit on error

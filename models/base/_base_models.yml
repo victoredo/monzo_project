@@ -1,0 +1,15 @@
+version: 2
+
+models:
+  - name: base_account_closed
+    description: base model of all accounts closed
+     
+  - name: base_account_created
+    description: base model of  all accounts created
+
+  - name: base_account_reopened
+    description: base model of  all account reopened
+
+  - name: base_account_transactions
+    description: base model of sum of all account transaction
+    

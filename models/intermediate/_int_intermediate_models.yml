@@ -1,0 +1,11 @@
+version: 2
+
+models:
+  - name: int_account_closed
+    description: tranformed model of all accounts closed to remove duplicate events
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - account_id_hashed
+            - closed_ts
+         
