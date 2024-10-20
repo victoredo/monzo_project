@@ -207,7 +207,7 @@ To ensure that the data model remains robust despite changes in upstream tables,
 
 `Dbt expectation`: expect that each columns in source tables used in downstream model transformation are present
 
-`Relationships Test`: Verifies that  relationships, such as account_id_hashed linking to related tables are intact. An account_id_hashed in the account_closed table should also be present in the account_open table
+`Relationships Test`: Verifies that  relationships, such as account_id_hashed linking to related tables are intact. An account_id_hashed in the account_closed table should also be present in the account_created table
 
 
 ## Data Integrity Test for Account Lifecycle Events
@@ -244,3 +244,6 @@ HAVING uam.total_transactions != expected_total;
 
 ```
 
+## CI/CD
+
+![CI/CD](CI_CD_PROCESS.png)

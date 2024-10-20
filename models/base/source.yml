@@ -53,6 +53,9 @@ sources:
             data_tests:
               - not_null
               - dbt_expectations.expect_column_to_exist
+              - relationships:
+                  to: source('analytics-take-home-test', 'account_created') 
+                  field: account_id_hashed
   
 
           - name: reopened_ts
@@ -74,6 +77,9 @@ sources:
             data_tests:
               - not_null
               - dbt_expectations.expect_column_to_exist
+              - relationships:
+                  to: source('analytics-take-home-test', 'account_created') 
+                  field: account_id_hashed
 
           - name: closed_ts
             description: date of accounts closed
@@ -95,6 +101,9 @@ sources:
               - not_null
               - unique
               - dbt_expectations.expect_column_to_exist
+              - relationships:
+                  to: source('analytics-take-home-test', 'account_created') 
+                  field: account_id_hashed
 
           - name: transactions_num
             description: sum of transaction per account_id per day 

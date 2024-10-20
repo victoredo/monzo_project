@@ -66,7 +66,7 @@ WITH ranked_closures AS (
             -- If no closure, account is open
             WHEN cr.closed_ts IS NULL THEN 'open'
             -- If account was reopened after being closed, it's open
-            WHEN cr.reopened_ts IS NOT NULL THEN 'open'
+            WHEN cr.reopened_ts IS NOT NULL THEN 'reopened'
             -- If account was closed but not reopened, it's closed
             ELSE 'closed'
         END AS account_status

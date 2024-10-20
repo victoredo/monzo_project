@@ -39,10 +39,10 @@ account_transaction AS (
         account_created.account_type,
         account_closed.closed_ts,
         MIN(account_reopened.reopened_ts) AS reopened_ts  -- Find the first reopen event after each close
-    FROM account_created AS  ac
-    LEFT JOIN account_closed as vc 
+    FROM account_created 
+    LEFT JOIN account_closed 
         ON account_created.account_id_hashed = account_closed.account_id_hashed
-    LEFT JOIN account_reopened  ro 
+    LEFT JOIN account_reopened  
         ON account_created.account_id_hashed = account_reopened.account_id_hashed
         AND account_reopened.reopened_ts > account_closed.closed_ts  -- Only consider reopen events after the closure
     GROUP BY ALL
@@ -52,29 +52,29 @@ account_transaction AS (
 -- 2. Flag Accounts with Multiple Closures Without Corresponding Reopen Events
 , multiple_closures_without_reopen AS (
     SELECT
-        cr.account_id_hashed,
-        cr.user_id_hashed,
-        COUNT(cr.closed_ts) AS num_closures,  -- Count how many closure events each account has
-        SUM(CASE WHEN cr.reopened_ts IS NULL THEN 1 ELSE 0 END) AS num_unreopened_closures  -- Count closures without reopen
-    FROM closure_reopen_pairs cr
-    GROUP BY cr.account_id_hashed, cr.user_id_hashed
-    HAVING COUNT(cr.closed_ts) > 1  -- Only flag if there are multiple closures
+        account_id_hashed,
+        user_id_hashed,
+        COUNT(closed_ts) AS num_closures,  -- Count how many closure events each account has
+        SUM(CASE WHEN reopened_ts IS NULL THEN 1 ELSE 0 END) AS num_unreopened_closures  -- Count closures without reopen
+    FROM closure_reopen_pairs 
+    GROUP BY ALL
+    HAVING COUNT(closed_ts) > 1  -- Only flag if there are multiple closures
 )
 
 -- 3. Determine Account Status Based on Closure-Reopen Cycles
 , account_lifecycle AS (
     SELECT
-        cr.account_id_hashed,
-        cr.user_id_hashed,
-        cr.created_ts,
-        cr.closed_ts,
-        cr.reopened_ts,
-        cr.account_type,
+        account_id_hashed,
+        user_id_hashed,
+        created_ts,
+        closed_ts,
+        reopened_ts,
+        account_type,
         CASE
             -- If no closure, account is open
-            WHEN cr.closed_ts IS NULL THEN 'open'
+            WHEN closed_ts IS NULL THEN 'open'
             -- If account was reopened after being closed, it's open
-            WHEN cr.reopened_ts IS NOT NULL THEN 'open'
+            WHEN reopened_ts IS NOT NULL THEN 'reopened'
             -- If account was closed but not reopened, it's closed
             ELSE 'closed'
         END AS account_status
@@ -86,7 +86,7 @@ account_transaction AS (
     SELECT
         account_id_hashed,
         SUM(transactions_num) AS total_transactions
-    FROM `analytics-take-home-test.monzo_datawarehouse.account_transactions`
+    FROM account_transaction 
     GROUP BY account_id_hashed
 ),
 
@@ -105,8 +105,10 @@ SELECT
         WHEN mcr.num_unreopened_closures > 0 THEN 1 ELSE 0  -- Flag if there are multiple closures without reopening
     END AS multiple_closures_without_reopen_flag
 FROM account_lifecycle al
-LEFT JOIN transaction_summary ts ON al.account_id_hashed = ts.account_id_hashed
-LEFT JOIN multiple_closures_without_reopen mcr ON al.account_id_hashed = mcr.account_id_hashed
+LEFT JOIN transaction_summary ts 
+    ON al.account_id_hashed = ts.account_id_hashed
+LEFT JOIN multiple_closures_without_reopen mcr 
+    ON al.account_id_hashed = mcr.account_id_hashed
 )
 select *
 from Unified_Account_Model

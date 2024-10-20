@@ -1,0 +1,63 @@
+version: 2
+
+models:
+  - name: mart_unified_accounts
+    description: "{{ doc('mart_unified_accounts') }}"   
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - account_id_hashed
+            - closed_ts
+         
+    columns:
+      - name: account_id_hashed
+        description: The unique identifier for each account. 
+        data_tests:
+          - not_null           
+            
+      - name: user_id_hashed
+        description: A hashed identifier representing the user who owns the account,
+                     allowing for user-level analysis.
+        data_tests:
+          - not_null
+
+      - name: account_type
+        description: Specifies the type of account, providing context for account analysis.
+        data_tests:
+          - not_null:
+                config:
+                  error_if: ">2" 
+      
+      - name: created_ts
+        description: The timestamp of when the account was first created.
+        data_tests:
+          - not_null
+
+      - name: closed_ts
+        description: The timestamp of the latest account closure, if the account has been closed.
+        data_tests:
+          - not_null
+      
+      - name: reopened_ts
+        description: The timestamp of the most recent reopening event, 
+                     if the account was reopened after being closed.
+        data_tests:
+          - not_null
+      
+      - name: account_status
+        description: Indicates the current status of the account, 
+                     which can be open, closed, or reopened, based on the most recent lifecycle event.
+        data_tests:
+          - not_null
+      
+      - name: total_transactions
+        description: The total number of transactions associated with the account,
+                     aggregated across the account's lifetime.
+        data_tests:
+          - dbt_utils.expression_is_true:
+            expression: '>= 0'
+
+      - name: multiple_closures_without_reopen_flag
+        description: A binary flag (1 or 0) that indicates whether the account has been closed multiple times without a corresponding reopen event, 
+                     signaling potential issues that require further investigation.
+        
