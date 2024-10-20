@@ -60,7 +60,7 @@ WITH ranked_closures AS (
    WHERE al.account_status = 'open'
 )
 
--- Now we generate a list of unique dates (calculation dates)
+-- generate a list of unique dates (calculation dates)
 , unique_transaction_dates AS (
    SELECT DISTINCT CAST(tr.date AS DATE) AS calculation_date
    FROM `analytics-take-home-test.monzo_datawarehouse.account_transactions` tr

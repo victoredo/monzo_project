@@ -30,8 +30,8 @@ account_transaction AS (
     Transformations
 */
 
--- 1. Prepare Account Lifecycle Data
-, closure_reopen_pairs AS (
+-- Prepare Account Lifecycle Data
+closure_reopen_pairs AS (
     SELECT
         account_created.account_id_hashed,
         account_created.user_id_hashed,
@@ -46,11 +46,11 @@ account_transaction AS (
         ON account_created.account_id_hashed = account_reopened.account_id_hashed
         AND account_reopened.reopened_ts > account_closed.closed_ts  -- Only consider reopen events after the closure
     GROUP BY ALL
-)
+),
 
 
--- 2. Flag Accounts with Multiple Closures Without Corresponding Reopen Events
-, multiple_closures_without_reopen AS (
+--  Flag Accounts with Multiple Closures Without Corresponding Reopen Events
+ multiple_closures_without_reopen AS (
     SELECT
         account_id_hashed,
         user_id_hashed,
@@ -59,10 +59,10 @@ account_transaction AS (
     FROM closure_reopen_pairs 
     GROUP BY ALL
     HAVING COUNT(closed_ts) > 1  -- Only flag if there are multiple closures
-)
+),
 
 -- 3. Determine Account Status Based on Closure-Reopen Cycles
-, account_lifecycle AS (
+ account_lifecycle AS (
     SELECT
         account_id_hashed,
         user_id_hashed,
@@ -79,10 +79,10 @@ account_transaction AS (
             ELSE 'closed'
         END AS account_status
     FROM closure_reopen_pairs cr
-)
+),
 
--- 4. Aggregate Transaction Data
-, transaction_summary AS (
+-- Aggregate Transaction Data
+transaction_summary AS (
     SELECT
         account_id_hashed,
         SUM(transactions_num) AS total_transactions
