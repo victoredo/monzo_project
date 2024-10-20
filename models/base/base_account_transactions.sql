@@ -17,10 +17,7 @@ formatted AS (
     SELECT
         -- FK
         CAST(account_id_hashed AS STRING) AS account_id_hashed,
-        
-        -- Details
-        CAST(account_type AS STRING) AS account_type,
-        
+            
         -- Measures
         
         CAST(transactions_num AS INTEGER) AS transactions_num ,
