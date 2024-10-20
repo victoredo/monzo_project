@@ -1,0 +1,124 @@
+version: 2
+
+sources:
+  - name: analytics-take-home-test
+    description: "A source for monzo account data"
+    schema: monzo_datawarehouse
+    tables:
+      - name: account_created
+        description: Raw table of all accounts created  per user_id
+        loaded_at_field: created_ts
+        freshness: 
+          warn_after: {count: 8, period: hour}
+          
+        columns:
+          - name: account_id_hashed
+            description: a surrogate unique identifier of each account_id
+            data_tests:
+              - not_null
+              - unique
+              - dbt_expectations.expect_column_to_exist
+
+          - name: user_id_hashed
+            description: a surrogate unique identifier of each user_id 
+            data_tests:
+              - not_null
+              - dbt_expectations.expect_column_to_exist
+
+          - name: account_type
+            description: represents varioud account type in monzo ['uk_retail','uk_retail_pot','uk_retail_joint']
+            data_tests:
+              - not_null:
+                  config:
+                    error_if: ">2"
+              - dbt_expectations.expect_column_to_exist
+
+          - name: created_ts
+            description: date of accounts creation
+            data_tests:
+              - not_null:
+                  config:
+                    error_if: ">0"
+              - dbt_expectations.expect_column_to_exist
+              
+              
+      - name: account_reopened
+        description: Raw table of all account reopened
+        loaded_at_field: reopened_ts
+        freshness: 
+          warn_after: {count: 8, period: hour}
+        columns:
+          - name: account_id_hashed
+            description: a surrogate unique identifier of each account_id reopened
+            data_tests:
+              - not_null
+              - dbt_expectations.expect_column_to_exist
+              - relationships:
+                  to: source('analytics-take-home-test', 'account_created') 
+                  field: account_id_hashed
+  
+
+          - name: reopened_ts
+            description: date of accounts reopen
+            data_tests:
+              - not_null:
+                  config:
+                    error_if: ">0"
+              - dbt_expectations.expect_column_to_exist
+              
+      - name: account_closed
+        description: Raw table of all accounts closed
+        loaded_at_field: closed_ts
+        freshness: 
+          warn_after: {count: 8, period: hour}
+        columns:
+          - name: account_id_hashed
+            description: a surrogate unique identifier of each account_id closed
+            data_tests:
+              - not_null
+              - dbt_expectations.expect_column_to_exist
+              - relationships:
+                  to: source('analytics-take-home-test', 'account_created') 
+                  field: account_id_hashed
+
+          - name: closed_ts
+            description: date of accounts closed
+            data_tests:
+              - not_null:
+                  config:
+                    error_if: ">0"
+              - dbt_expectations.expect_column_to_exist
+
+      - name: account_transactions
+        description: Raw table of transaction per account_id
+        loaded_at_field: date
+        freshness: 
+          warn_after: {count: 8, period: hour}
+        columns:
+          - name: account_id_hashed
+            description: a surrogate unique identifier of each account_id 
+            data_tests:
+              - not_null
+              - unique
+              - dbt_expectations.expect_column_to_exist
+              - relationships:
+                  to: source('analytics-take-home-test', 'account_created') 
+                  field: account_id_hashed
+
+          - name: transactions_num
+            description: sum of transaction per account_id per day 
+            data_tests:
+              - dbt_utils.expression_is_true:
+                  expression: '>= 0'
+              - dbt_expectations.expect_column_to_exist
+
+          - name: date
+            description: date of accounts transaction
+            data_tests:
+              - not_null:
+                  config:
+                    error_if: ">0"
+              - dbt_expectations.expect_column_to_exist
+    
+
+  

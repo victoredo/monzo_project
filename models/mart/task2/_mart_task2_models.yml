@@ -1,0 +1,41 @@
+version: 2
+
+models:
+  - name: mart_7_days_active_users
+    description: "{{ doc(mart_7_days_active_users') }}"   
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - account_id_hashed
+            - closed_ts
+         
+    columns:
+      - name: calculation_date
+        description: The specific date for which the 7-day active user rate is calculated.
+                     This is the focal point of the metric, representing a running window for the previous 7 days
+        data_type: date
+        data_tests:
+          - not_null           
+            
+      - name: active_users
+        description: The number of users who had at least one transaction in the last 7 days, 
+                    calculated for each calculation_date. Users with multiple accounts are considered "active" if they had transactions in any of their accounts.
+        data_type: integer
+        data_tests:
+          - not_null
+
+      - name: total_open_users
+        description: The total number of users who had at least one open account on the calculation_date. 
+                    This is the denominator in the calculation of the 7-day active user rate.
+        data_type: integer
+        data_tests:
+          - not_null
+                
+      - name: seven_day_active_user_rate
+        description: The ratio of active users (those with transactions in the last 7 days) to the total number of users with open accounts on the calculation_date. 
+                     This is the key metric, expressed as a percentage (or ratio).
+        data_type: float
+        data_tests:
+          - not_null
+
+      
